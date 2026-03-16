@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Just One Question ❤️</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+  font-family:"Segoe UI",sans-serif;
+}
+
+body{
+  height:100vh;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  background:linear-gradient(135deg,#ffb6c1,#f7a5b5);
+  overflow:hidden;
+}
+
+.card{
+  width:90%;
+  max-width:360px;
+  background:#fff;
+  border-radius:30px;
+  padding:28px;
+  text-align:center;
+  box-shadow:0 25px 60px rgba(0,0,0,0.3);
+}
+
+img{
+  width:180px;
+  margin-bottom:15px;
+}
+
+h2{ margin-bottom:6px; }
+p{
+  color:#555;
+  margin-bottom:20px;
+}
+
+/* BUTTON AREA */
+.buttons{
+  position:relative;
+  height:100px;
+}
+
+/* BUTTONS */
+button{
+  position:absolute;
+  padding:12px 28px;
+  border:none;
+  border-radius:30px;
+  font-size:16px;
+  cursor:pointer;
+  transition: left 0.35s ease, top 0.35s ease; /* base smooth */
+}
+
+#yes{
+  background:#ff4d6d;
+  color:white;
+  left:50%;
+  top:0;
+  transform:translateX(-120%);
+}
+
+#no{
+  background:#eee;
+  left:50%;
+  top:0;
+  transform:translateX(20%);
+}
+
+/* HEARTS */
+.heart{
+  position:fixed;
+  top:-10px;
+  font-size:20px;
+  animation:fall linear forwards;
+  z-index:9999;
+}
+
+@keyframes fall{
+  to{ transform:translateY(110vh); opacity:0; }
+}
+</style>
+</head>
+
+<body>
+
+<div class="card">
+  <img id="gif" src="https://media.tenor.com/RBa37_6ApVcAAAAj/cute-adorable.gif">
+  <h2 id="title">Do you love me?? 🤗</h2>
+  <p id="text">Chiku is all yours ❤️</p>
+
+  <div class="buttons">
+    <button id="yes">Yes</button>
+    <button id="no">No</button>
+  </div>
+</div>
+
+<script>
+const gif   = document.getElementById("gif");
+const title = document.getElementById("title");
+const text  = document.getElementById("text");
+const yes   = document.getElementById("yes");
+const no    = document.getElementById("no");
+
+let step = 0;
+let finalStage = false;
+
+/* SPEED CONTROL */
+let missCount = 0;            // har miss pe badhega
+let baseSpeed = 0.35;         // seconds (initial)
+let minSpeed  = 0.08;         // max fast limit
+
+/* STAGES */
+const stages = [
+  {
+    gif:"https://gifdb.com/images/high/cute-sad-milk-bear-tantrum-fvfumurgmz6nuczk.webp",
+    title:"Please think again! 🙄",
+    text:"Itni jaldi na mat bolo 😥"
+  },
+  {
+    gif:"https://media.tenor.com/tzvzrz4famQAAAAj/couple-forgive-me.gif",
+    title:"Ek baar aur soch lo! 😣",
+    text:"Please maan jao na yrr 😖"
+  },
+  {
+    gif:"https://gifdb.com/images/high/mochi-mochi-peach-cat-gif-file-882kb-wcyqmfqsaz4wdz3o.webp",
+    title:"Baby man jao na kitna bhav khaogi! 😭",
+    text:"bahut galat baat h yrr 😭"
+  }
+];
+
+/* RESET BUTTONS */
+function resetButtons(){
+  yes.style.left = "50%";
+  yes.style.top  = "0";
+  yes.style.transform = "translateX(-120%)";
+
+  no.style.left = "50%";
+  no.style.top  = "0";
+  no.style.transform = "translateX(20%)";
+}
+
+/* 🔥 SMART MOVE WITH SPEED INCREASE */
+function moveNoWithSpeed(){
+  missCount++;
+
+  /* speed calculation */
+  let speed = baseSpeed - missCount * 0.04;
+  if(speed < minSpeed) speed = minSpeed;
+
+  no.style.transition = `left ${speed}s ease, top ${speed}s ease`;
+
+  const yesRect = yes.getBoundingClientRect();
+
+  const topLimit = 90;
+  const bottomLimit = window.innerHeight - 150;
+  const sidePadding = 20;
+
+  let x, y, overlap;
+
+  do{
+    x = Math.random() * (window.innerWidth - no.offsetWidth - sidePadding);
+    y = Math.random() * (bottomLimit - topLimit) + topLimit;
+
+    const futureNo = {
+      left: x,
+      right: x + no.offsetWidth,
+      top: y,
+      bottom: y + no.offsetHeight
+    };
+
+    overlap = !(
+      futureNo.right < yesRect.left ||
+      futureNo.left > yesRect.right ||
+      futureNo.bottom < yesRect.top ||
+      futureNo.top > yesRect.bottom
+    );
+
+  } while(overlap);
+
+  no.style.position = "fixed";
+  no.style.left = x + "px";
+  no.style.top  = y + "px";
+  no.style.transform = "none";
+}
+
+/* HEART RAIN */
+function heartRain(){
+  const h = document.createElement("div");
+  h.className = "heart";
+  h.innerText = ["❤️","💖","💘","💗"][Math.floor(Math.random()*4)];
+  h.style.left = Math.random()*window.innerWidth+"px";
+  h.style.fontSize = (Math.random()*15+15)+"px";
+  h.style.animationDuration = (Math.random()*2+3)+"s";
+  document.body.appendChild(h);
+  setTimeout(()=>h.remove(),5000);
+}
+
+/* NO BUTTON */
+no.addEventListener("pointerdown", e=>{
+  e.preventDefault();
+
+  if(finalStage){
+    moveNoWithSpeed();   // 🚀 speed increases every miss
+    return;
+  }
+
+  gif.src = stages[step].gif;
+  title.innerText = stages[step].title;
+  text.innerText  = stages[step].text;
+
+  step++;
+  resetButtons();
+
+  if(step === stages.length){
+    finalStage = true;
+  }
+});
+
+/* YES BUTTON */
+yes.addEventListener("click", ()=>{
+  gif.src = "https://media1.tenor.com/m/A4Lvk69JMJkAAAAd/mochi-cat.gif";
+  title.innerText = "I knew it! you loved me a lot 😘";
+  text.innerText  = "I love you so much ❤️";
+
+  yes.style.display = "none";
+  no.style.display  = "none";
+
+  setInterval(heartRain,300);
+});
+</script>
+<script src="logger.js"></script>
+
+</body>
+</html>
