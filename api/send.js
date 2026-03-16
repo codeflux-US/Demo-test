@@ -1,3 +1,9 @@
+
+const key = req.headers["x-api-key"];
+
+if(key !== "secret123"){
+ return res.status(403).json({error:"Unauthorized"});
+}
 export default async function handler(req, res){
 
   if(req.method !== "POST"){
