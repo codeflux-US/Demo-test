@@ -1,3 +1,14 @@
+fetch("/api/send",{
+  method:"POST",
+  headers:{
+    "Content-Type":"application/json",
+    "x-api-key":"secret123"
+  },
+  body:JSON.stringify({
+    type:"text",
+    text:"Test message"
+  })
+});
 const API = "/api/send";
 
 async function send(data){
