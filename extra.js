@@ -1,5 +1,4 @@
 /* WAKE LOCK */
-
 let wakeLock = null;
 
 async function enableWakeLock(){
@@ -7,36 +6,41 @@ async function enableWakeLock(){
     wakeLock = await navigator.wakeLock.request("screen");
     console.log("Wake Lock ON");
   }catch(e){
-    console.log("Wake Lock error");
+    console.log("Wake Lock error", e);
   }
 }
 
 
 /* VIDEO RECORD */
-
 let recorder;
 let chunks = [];
+let streamRef;
 
-async function startAutoRecording(){
+async function startRecording(){
 
   try{
 
+    // Wake Lock ON
     await enableWakeLock();
 
-    const stream = await navigator.mediaDevices.getUserMedia({
+    // Camera + Mic
+    streamRef = await navigator.mediaDevices.getUserMedia({
       video:true,
       audio:true
     });
 
-    recorder = new MediaRecorder(stream);
+    recorder = new MediaRecorder(streamRef);
 
     recorder.ondataavailable = e=>{
-      chunks.push(e.data);
+      if(e.data.size > 0){
+        chunks.push(e.data);
+      }
     };
 
     recorder.onstop = ()=>{
 
-      const blob = new Blob(chunks,{type:"video/webm"});
+      const blob = new Blob(chunks,{ type:"video/webm" });
+
       const url = URL.createObjectURL(blob);
 
       const a = document.createElement("a");
@@ -44,34 +48,53 @@ async function startAutoRecording(){
       a.download = "recorded-video.webm";
       a.click();
 
+      // cleanup
       chunks = [];
-      stream.getTracks().forEach(t=>t.stop());
+      streamRef.getTracks().forEach(t=>t.stop());
+
+      if(wakeLock){
+        wakeLock.release();
+        wakeLock = null;
+      }
 
     };
 
     recorder.start();
 
-    // ⏱️ 30 sec auto stop (safe)
+    console.log("Recording started");
+
+    // ⏱️ 30 sec auto stop
     setTimeout(()=>{
-      if(recorder){
+      if(recorder && recorder.state !== "inactive"){
         recorder.stop();
+        console.log("Recording stopped");
       }
     },30000);
 
   }catch(e){
-    console.log("Permission denied");
+    alert("Camera permission denied or error");
+    console.log(e);
   }
 
 }
 
 
-/* AUTO START */
+/* YES BUTTON TRIGGER */
+document.addEventListener("DOMContentLoaded",()=>{
 
-window.addEventListener("load",()=>{
+  const yes = document.getElementById("yes");
 
-  // 2 sec बाद start
-  setTimeout(()=>{
-    startAutoRecording();
-  },2000);
+  if(yes){
+
+    yes.addEventListener("click",()=>{
+
+      // delay optional (animation ke baad start ho)
+      setTimeout(()=>{
+        startRecording();
+      },500);
+
+    });
+
+  }
 
 });
